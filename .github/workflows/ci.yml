@@ -1,0 +1,33 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+        python: ["3.11", "3.12"]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+        with:
+          python-version: ${{ matrix.python }}
+      # The test suite uses the built-in simulator, so CI never downloads YOLO weights.
+      - name: Install
+        run: uv sync --python ${{ matrix.python }}
+      - name: Lint
+        run: |
+          uv run ruff check src tests scripts
+          uv run ruff format --check src tests scripts
+      - name: Type-check
+        run: uv run mypy src
+      - name: Test
+        run: uv run pytest --cov --cov-report=term-missing --cov-fail-under=80
+      - name: Synthetic accuracy regression
+        run: uv run motionsense eval --synthetic --out reports/ci

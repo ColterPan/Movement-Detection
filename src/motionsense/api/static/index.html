@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>MotionSense</title>
+  <link rel="stylesheet" href="/static/styles.css">
+</head>
+<body>
+  <div id="alert" class="alert hidden" role="alert" aria-live="assertive">
+    <div class="alert-title" id="alert-title">FALL DETECTED</div>
+    <div class="alert-msg" id="alert-msg"></div>
+    <button id="alert-ack" type="button">Acknowledge</button>
+  </div>
+
+  <header class="topbar">
+    <div class="brand"><span class="dot"></span>MotionSense</div>
+    <div class="status">
+      <span id="conn" class="pill pill-off">connecting…</span>
+      <span id="fps" class="pill">– FPS</span>
+      <span id="source" class="pill muted">–</span>
+    </div>
+    <div class="toggles">
+      <label><input type="checkbox" id="opt-sound" checked> Alarm sound</label>
+      <label><input type="checkbox" id="opt-voice"> Voice check-in</label>
+    </div>
+  </header>
+
+  <main class="layout">
+    <section class="video-card">
+      <img id="video" alt="Live annotated camera feed">
+      <div id="video-empty" class="video-empty">Waiting for video…</div>
+    </section>
+
+    <aside class="side">
+      <div class="card">
+        <div class="card-head"><h2>People</h2><span id="people-count" class="badge">0</span></div>
+        <div id="people" class="people"><p class="muted">Nobody in view.</p></div>
+      </div>
+      <div class="card">
+        <div class="card-head"><h2>Objects in view</h2></div>
+        <div id="objects" class="chips"><span class="muted">None detected.</span></div>
+      </div>
+    </aside>
+
+    <section class="card events-card">
+      <div class="card-head">
+        <h2>Events</h2>
+        <label class="small"><input type="checkbox" id="opt-info"> show activity changes</label>
+      </div>
+      <ol id="events" class="events"></ol>
+    </section>
+  </main>
+
+  <footer class="foot muted">
+    API docs at <a href="/docs">/docs</a> · live JSON at <code>/ws</code> · prototype, not a medical device
+  </footer>
+  <script src="/static/app.js"></script>
+</body>
+</html>

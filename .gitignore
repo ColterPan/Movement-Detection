@@ -1,0 +1,47 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+build/
+dist/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+coverage.xml
+htmlcov/
+
+# Models, datasets, recordings and private camera data never go into git
+*.pt
+*.onnx
+*_openvino_model/
+datasets/
+recordings/
+*.mp4
+*.avi
+events/
+events.jsonl
+runs/
+
+# Local config / secrets
+.env
+config/local.yaml
+
+# Editors / OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Generated reports (keep curated ones by force-adding)
+reports/latest/
+reports/ci/
+
+# OpenVINO GPU compiler diagnostics
+kernel.errors.txt
+
+# Local Claude Code session files
+.claude/
