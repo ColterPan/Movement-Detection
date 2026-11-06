@@ -24,6 +24,7 @@ MotionSense watches a webcam, phone camera, IP camera or video file and, for eve
 - [Configuration](#configuration)
 - [Testing and measured accuracy](#testing-and-measured-accuracy)
 - [Roadmap](#roadmap)
+- [Privacy and security](#privacy-and-security)
 - [License and credits](#license-and-credits)
 
 ---
@@ -201,7 +202,7 @@ Any stream OpenCV can read works as `--source`:
 - **IP / CCTV cameras**: `--source rtsp://user:pass@192.168.1.20:554/stream1`
 - **Video file**: `--source path/to/video.mp4`
 
-To open the dashboard from your phone, bind to your LAN **with a token**:
+To open the dashboard from your phone, bind to your LAN **with a token**. The server refuses to listen on the network without one:
 
 ```bat
 python -m uv run --extra yolo motionsense serve --source 0 --host 0.0.0.0 --token "choose-a-long-secret"
@@ -279,7 +280,7 @@ Everything the dashboard shows comes from the public API, so any other program c
 | `GET /api/v1/schema/event`                           | JSON Schema of the event payload                                               |
 | `WS /ws`                                             | Push stream: `{"type":"state",...}` at 10 Hz and `{"type":"event",...}`    |
 
-If a token is configured, send `Authorization: Bearer <token>` or `?token=<token>`. Without a token the server only accepts requests addressed to `localhost`, and WebSocket connections from other websites are refused, so a web page you visit cannot spy on your camera. Stream passwords in `rtsp://user:pass@…` URLs are never shown in the API.
+If a token is configured (12+ characters), send `Authorization: Bearer <token>` or `?token=<token>`; without it `/api/v1/health` only reports version and status. Without a token the server only accepts requests addressed to `localhost`, and WebSocket connections from other websites are refused, so a web page you visit cannot spy on your camera. Stream passwords in `rtsp://user:pass@…` URLs are never shown in the API.
 
 ### Event schema (v1.0)
 
@@ -376,6 +377,10 @@ Stand, sit on a chair, walk, jog on the spot, squat (rep count), do push-ups (re
 - **Phase 2: AI response layer.** On `fall_suspected`, send the snapshot sequence to a vision LLM (Claude) for a second opinion, speak "Are you okay?" (text-to-speech) and listen for an answer (local Whisper), then escalate to a phone notification (ntfy, Telegram or Pushover).
 - **Activity model v2**: a small temporal network trained on your own recordings (`motionsense record`) plus public datasets.
 - **Phase 3: live AI connectivity.** An MCP server (`get_scene`, `get_events`, `get_snapshot`) so AI agents can "see" the room, multi-camera support, and Docker images for a Raspberry Pi or home server.
+
+## Privacy and security
+
+Video is processed in memory and never uploaded. Only short incident snapshots and an event log are kept, on your own computer, and the server is reachable from this PC only unless you deliberately enable network access with a token. See [SECURITY.md](SECURITY.md) for exactly what is stored, the network protections, and how to report a vulnerability.
 
 ## License and credits
 

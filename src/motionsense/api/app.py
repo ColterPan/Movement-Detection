@@ -50,6 +50,11 @@ class ServiceLike(Protocol):
 
 
 LOOPBACK_HOSTS = frozenset({"localhost", "127.0.0.1", "::1"})
+DASHBOARD_CSP = (
+    "default-src 'self'; img-src 'self' data: blob:; connect-src 'self' ws: wss:; "
+    "style-src 'self'; script-src 'self'; frame-ancestors 'none'; base-uri 'none'; "
+    "form-action 'none'"
+)
 
 
 def _token_ok(expected: str | None, provided: str | None) -> bool:
@@ -115,6 +120,18 @@ def create_app(service: ServiceLike, manage_lifecycle: bool = True) -> FastAPI:
         if not _token_ok(settings.api.token, _extract_token(request)):
             raise HTTPException(status_code=401, detail="missing or invalid token")
 
+    @app.middleware("http")
+    async def security_headers(request: Request, call_next: Any) -> Response:
+        response: Response = await call_next(request)
+        response.headers.setdefault("X-Content-Type-Options", "nosniff")
+        # The dashboard URL may carry ?token=...; never send it to other sites as a Referer.
+        response.headers.setdefault("Referrer-Policy", "no-referrer")
+        # Nobody may embed the camera page in their own site (clickjacking / spying).
+        response.headers.setdefault("X-Frame-Options", "DENY")
+        if request.url.path == "/" or request.url.path.startswith("/static/"):
+            response.headers.setdefault("Content-Security-Policy", DASHBOARD_CSP)
+        return response
+
     auth = [Depends(require_token)]
     static_dir = resources.files("motionsense.api") / "static"
     app.mount("/static", StaticFiles(directory=str(static_dir)), name="static")
@@ -124,8 +141,12 @@ def create_app(service: ServiceLike, manage_lifecycle: bool = True) -> FastAPI:
         return HTMLResponse((static_dir / "index.html").read_text(encoding="utf-8"))
 
     @app.get("/api/v1/health", tags=["system"])
-    def health() -> dict[str, Any]:
-        return {"version": __version__, **service.status()}
+    def health(request: Request) -> dict[str, Any]:
+        """Liveness. Details (source, errors, fps) only for authorised callers when a token is set."""
+        status = service.status()
+        if settings.api.token and not _token_ok(settings.api.token, _extract_token(request)):
+            return {"version": __version__, "status": status["status"]}
+        return {"version": __version__, **status}
 
     @app.get("/api/v1/state", tags=["scene"], dependencies=auth)
     def state(keypoints: bool = False) -> dict[str, Any]:

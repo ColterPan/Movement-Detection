@@ -30,10 +30,13 @@ FPS = 30.0
 
 
 def download(url: str, dest: Path) -> None:
+    if not url.startswith("https://"):
+        raise ValueError(f"refusing non-HTTPS download: {url}")
     if dest.exists() and dest.stat().st_size > 0:
         return
     tmp = dest.with_suffix(dest.suffix + ".part")
-    with urllib.request.urlopen(url, timeout=60) as resp, tmp.open("wb") as fh:
+    # nosec B310: only https:// URLs reach this point (checked above)
+    with urllib.request.urlopen(url, timeout=60) as resp, tmp.open("wb") as fh:  # nosec B310
         fh.write(resp.read())
     tmp.replace(dest)
 

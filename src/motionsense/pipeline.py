@@ -231,7 +231,8 @@ class Pipeline:
         )
 
     def _analyse_person(self, det: PersonDetection, frame: Frame) -> PersonState:
-        assert det.track_id is not None
+        if det.track_id is None:  # pragma: no cover - IouTracker always assigns an id
+            raise ValueError("detection without a track id")
         ts = frame.ts
         tid = det.track_id
         ctx = self._tracks.get(tid)

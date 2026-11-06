@@ -44,9 +44,9 @@ def test_redact_url(spec, expected):
 
 
 def test_token_compare_handles_non_ascii():
-    assert _token_ok("s3cret", "s3cret")
-    assert not _token_ok("s3cret", "sécret")
-    assert not _token_ok("s3cret", None)
+    assert _token_ok("long-test-token-123", "long-test-token-123")
+    assert not _token_ok("long-test-token-123", "sécret")
+    assert not _token_ok("long-test-token-123", None)
     assert _token_ok(None, "anything")
 
 
@@ -219,3 +219,54 @@ def test_snapshots_only_for_incidents_and_bounded(tmp_path: Path):
     for i in range(6):
         rec(make_event(EventType.FALL_CONFIRMED, ts=float(i)))
     assert len(list(tmp_path.iterdir())) == 3
+
+
+# ------------------------------------------------------------------ public-release hardening
+def test_short_tokens_are_rejected():
+    from pydantic import ValidationError
+
+    with pytest.raises(ValidationError):
+        load_settings(overrides={"api": {"token": "short"}})
+
+
+def test_health_hides_details_without_token(tmp_path: Path):
+    service = _service(tmp_path, token="long-test-token-123")
+    app = create_app(service, manage_lifecycle=False)
+    with TestClient(app, base_url="http://localhost") as c:
+        anonymous = c.get("/api/v1/health").json()
+        assert set(anonymous) == {"version", "status"}
+        full = c.get(
+            "/api/v1/health", headers={"Authorization": "Bearer long-test-token-123"}
+        ).json()
+        assert "source" in full and "error" in full
+
+
+def test_security_headers(tmp_path: Path):
+    app = create_app(_service(tmp_path), manage_lifecycle=False)
+    with TestClient(app, base_url="http://localhost") as c:
+        page = c.get("/")
+        assert page.headers["x-frame-options"] == "DENY"
+        assert page.headers["referrer-policy"] == "no-referrer"
+        assert "frame-ancestors 'none'" in page.headers["content-security-policy"]
+        api = c.get("/api/v1/health")
+        assert api.headers["x-content-type-options"] == "nosniff"
+        assert "content-security-policy" not in api.headers  # /docs needs its own scripts
+
+
+def test_cli_refuses_network_exposure_without_token():
+    from typer.testing import CliRunner
+
+    from motionsense.cli import app
+
+    result = CliRunner().invoke(app, ["serve", "--source", "synthetic:demo", "--host", "0.0.0.0"])
+    assert result.exit_code == 2
+    assert "Refusing" in result.output
+
+
+def test_webhook_logs_never_contain_the_secret_path():
+    from motionsense.sinks.webhook import _safe_target
+
+    assert (
+        _safe_target("https://hooks.zapier.com/hooks/catch/123/SECRET/?k=v")
+        == "https://hooks.zapier.com"
+    )

@@ -11,6 +11,8 @@ import typer
 
 from motionsense.config import Settings, load_settings
 
+LOCAL_HOSTS = ("127.0.0.1", "localhost", "::1")
+
 app = typer.Typer(
     add_completion=False,
     no_args_is_help=True,
@@ -92,13 +94,16 @@ def serve(
         imgsz=imgsz,
         objects=objects,
     )
-    if settings.api.host not in ("127.0.0.1", "localhost") and not settings.api.token:
+    if settings.api.host not in LOCAL_HOSTS and not settings.api.token:
         typer.secho(
-            "WARNING: serving on the network without --token: anyone on your LAN can see "
-            "the camera.",
-            fg=typer.colors.YELLOW,
+            "Refusing to serve the camera on the network without a token: anyone on your "
+            "network could watch it.\nAdd --token <a long random secret> "
+            '(e.g. python -c "import secrets; print(secrets.token_urlsafe(24))").',
+            fg=typer.colors.RED,
+            err=True,
         )
-    url = f"http://{'localhost' if settings.api.host in ('0.0.0.0', '127.0.0.1') else settings.api.host}:{settings.api.port}"
+        raise typer.Exit(code=2)
+    url = f"http://{'localhost' if settings.api.host in ('0.0.0.0', '127.0.0.1') else settings.api.host}:{settings.api.port}"  # nosec B104 - string comparison for the display URL, not a bind
     typer.secho(f"Dashboard: {url}   API docs: {url}/docs", fg=typer.colors.GREEN)
     if open_browser:
         webbrowser.open(url + (f"/?token={settings.api.token}" if settings.api.token else ""))
@@ -199,7 +204,8 @@ def evaluate(
         from motionsense.perception.yolo_pose import YoloPoseBackend
         from motionsense.sources.opencv_source import VideoFileSource
 
-        assert labels is not None
+        if labels is None:  # pragma: no cover - guarded by the check above
+            raise typer.BadParameter("--labels is required")
         items = read_labels(labels)
         # Load (and compile) the models once; only the tracker is reset between clips.
         pose_backend = YoloPoseBackend(settings.models, settings.models_dir)

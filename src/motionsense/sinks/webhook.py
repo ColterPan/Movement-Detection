@@ -9,6 +9,7 @@ import logging
 import queue
 import threading
 from collections.abc import Sequence
+from urllib.parse import urlsplit
 
 import httpx
 
@@ -19,6 +20,12 @@ logger = logging.getLogger(__name__)
 MAX_QUEUE = 500
 RETRIES = 2
 TIMEOUT_S = 5.0
+
+
+def _safe_target(url: str) -> str:
+    """Webhook URLs often embed a secret in the path or query; log only scheme and host."""
+    parts = urlsplit(url)
+    return f"{parts.scheme}://{parts.hostname or '?'}"
 
 
 class WebhookSink:
@@ -74,7 +81,12 @@ class WebhookSink:
             except Exception as exc:  # httpx.HTTPError, InvalidURL, ...
                 if attempt == RETRIES:
                     self.failed += 1
-                    logger.warning("webhook %s failed after %d attempts: %s", url, attempt + 1, exc)
+                    logger.warning(
+                        "webhook %s failed after %d attempts: %s",
+                        _safe_target(url),
+                        attempt + 1,
+                        type(exc).__name__,
+                    )
 
     def flush(self, timeout: float = 5.0) -> None:
         """Wait until queued events are delivered (used by tests and shutdown)."""

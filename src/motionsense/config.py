@@ -99,7 +99,11 @@ class FallConfig(_Section):
 class ApiConfig(_Section):
     host: str = "127.0.0.1"
     port: int = Field(8000, ge=1, le=65535)
-    token: str | None = Field(None, description="If set, required as Bearer token or ?token=")
+    token: str | None = Field(
+        None,
+        min_length=12,
+        description="If set (12+ characters), required as Bearer token or ?token=",
+    )
     state_hz: float = Field(10.0, gt=0.0, le=60.0)
     stream_fps: float = Field(15.0, gt=0.0, le=60.0)
     jpeg_quality: int = Field(75, ge=10, le=100)

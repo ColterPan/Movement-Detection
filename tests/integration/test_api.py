@@ -101,16 +101,21 @@ def test_frame_schema_and_websocket(client):
 
 
 def test_token_protects_endpoints(tmp_path: Path):
-    service = _service(tmp_path, token="s3cret")
+    service = _service(tmp_path, token="long-test-token-123")
     with TestClient(create_app(service), base_url="http://localhost") as c:
         assert c.get("/api/v1/health").status_code == 200  # health stays public
         assert c.get("/api/v1/state").status_code == 401
         assert c.get("/api/v1/state", headers={"Authorization": "Bearer wrong"}).status_code == 401
-        assert c.get("/api/v1/state", headers={"Authorization": "Bearer s3cret"}).status_code == 200
-        assert c.get("/api/v1/state?token=s3cret").status_code == 200
+        assert (
+            c.get(
+                "/api/v1/state", headers={"Authorization": "Bearer long-test-token-123"}
+            ).status_code
+            == 200
+        )
+        assert c.get("/api/v1/state?token=long-test-token-123").status_code == 200
         with pytest.raises(WebSocketDisconnect), c.websocket_connect("ws://localhost/ws") as ws:
             ws.receive_json()
-        with c.websocket_connect("ws://localhost/ws?token=s3cret") as ws:
+        with c.websocket_connect("ws://localhost/ws?token=long-test-token-123") as ws:
             assert ws.receive_json()["type"] in {"event", "state"}
 
 
