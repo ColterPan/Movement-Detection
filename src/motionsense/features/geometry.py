@@ -33,6 +33,9 @@ class PoseFeatures:
     has_torso: bool
     has_legs: bool
     quality: float  # mean keypoint confidence
+    posture_tilt: float = NAN  # best tilt estimate: torso, else head-over-shoulders, else box shape
+    hips_visible: bool = False  # False: hip_xy is only the box centre (unusable for motion)
+    truncated: bool = False  # the person's box touches the frame edge (partly out of view)
 
 
 def midpoint(kps: Keypoints, a: int, b: int, min_conf: float) -> FloatArray | None:
@@ -112,8 +115,60 @@ def bbox_aspect(bbox: BBox) -> float:
     return float(w / h)
 
 
-def compute_pose_features(kps: Keypoints, bbox: BBox, min_conf: float = 0.35) -> PoseFeatures:
-    """Compute static pose features for one person."""
+EDGE_FRACTION = 0.015  # keypoints this close to the frame border are not trusted
+
+
+def _edge_margin(frame_size: tuple[int, int]) -> tuple[float, float]:
+    w, h = frame_size
+    return max(3.0, EDGE_FRACTION * w), max(3.0, EDGE_FRACTION * h)
+
+
+def is_truncated(bbox: BBox, frame_size: tuple[int, int] | None) -> bool:
+    """True when the box touches the left, right or bottom edge of the frame."""
+    if frame_size is None:
+        return False
+    mx, my = _edge_margin(frame_size)
+    w, h = frame_size
+    return bbox[0] <= mx or bbox[2] >= w - mx or bbox[3] >= h - my
+
+
+def drop_edge_keypoints(kps: Keypoints, frame_size: tuple[int, int] | None) -> Keypoints:
+    """Pose models *guess* body parts that are outside the image and pile them up on the border.
+    Treat keypoints on (or beyond) the left/right/bottom edge as not visible."""
+    if frame_size is None:
+        return kps
+    mx, my = _edge_margin(frame_size)
+    w, h = frame_size
+    x, y = kps.xy[:, 0], kps.xy[:, 1]
+    on_edge = (x <= mx) | (x >= w - mx) | (y >= h - my)
+    if not on_edge.any():
+        return kps
+    return Keypoints(xy=kps.xy, conf=np.where(on_edge, 0.0, kps.conf))
+
+
+def _head_tilt(kps: Keypoints, sh: FloatArray | None, min_conf: float) -> float:
+    """Tilt of the shoulders->head line: ~0 when the head is above the shoulders."""
+    head = midpoint(kps, KP.L_EYE, KP.R_EYE, min_conf)
+    if head is None and kps.visible(KP.NOSE, min_conf):
+        head = kps.xy[KP.NOSE]
+    if head is None or sh is None:
+        return NAN
+    return tilt_from_vertical(head, sh)
+
+
+def compute_pose_features(
+    kps: Keypoints,
+    bbox: BBox,
+    min_conf: float = 0.35,
+    frame_size: tuple[int, int] | None = None,
+) -> PoseFeatures:
+    """Compute static pose features for one person.
+
+    Pass ``frame_size`` so keypoints guessed outside the image are ignored and partly
+    visible people are recognised as such.
+    """
+    kps = drop_edge_keypoints(kps, frame_size)
+    truncated = is_truncated(bbox, frame_size)
     sh = midpoint(kps, KP.L_SHOULDER, KP.R_SHOULDER, min_conf)
     hip = midpoint(kps, KP.L_HIP, KP.R_HIP, min_conf)
     has_torso = sh is not None and hip is not None
@@ -146,6 +201,16 @@ def compute_pose_features(kps: Keypoints, bbox: BBox, min_conf: float = 0.35) ->
     else:
         hip_xy = ((bbox[0] + bbox[2]) / 2.0, (bbox[1] + bbox[3]) / 2.0)
 
+    if has_torso:
+        posture_tilt = tilt
+    elif not math.isnan(head_tilt := _head_tilt(kps, sh, min_conf)):
+        posture_tilt = head_tilt
+    elif not truncated:
+        # Box shape only means something when the whole body is in the frame.
+        posture_tilt = max(0.0, min(90.0, (bbox_aspect(bbox) - 0.4) / 1.6 * 90.0))
+    else:
+        posture_tilt = NAN
+
     if kps.visible(KP.NOSE, min_conf):
         head_y = float(kps.xy[KP.NOSE][1])
     elif sh is not None:
@@ -167,4 +232,7 @@ def compute_pose_features(kps: Keypoints, bbox: BBox, min_conf: float = 0.35) ->
         has_torso=has_torso,
         has_legs=has_legs,
         quality=float(np.mean(kps.conf)),
+        posture_tilt=posture_tilt,
+        hips_visible=hip is not None,
+        truncated=truncated,
     )

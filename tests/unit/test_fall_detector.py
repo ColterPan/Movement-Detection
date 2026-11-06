@@ -149,12 +149,20 @@ def test_track_lost_after_impact_confirms():
 
 def test_track_lost_during_fast_descent_is_suspected():
     det = make()
-    no_rotation = replace(IMPACT, tilt_change=0.0)  # fast drop, but the torso was not seen rotating
-    det.update(0.0, POSE, no_rotation, LYING, None)
+    # fast drop and the torso has started to tip (25 deg) when the person disappears
+    tipping = replace(IMPACT, tilt_change=25.0)
+    det.update(0.0, POSE, tipping, LYING, None)
     assert det.state == FallState.MONITORING
     u = det.on_track_lost(0.5)
     assert types(u) == [EventType.FALL_SUSPECTED]
     assert u.signals[0].details["reason"] == "lost_during_descent"
+
+
+def test_leaving_the_view_without_tipping_over_is_silent():
+    """E.g. stepping close past the camera: the box jumps but the body stays upright."""
+    det = make()
+    det.update(0.0, POSE, replace(IMPACT, tilt_change=3.0), STANDING, None)
+    assert det.on_track_lost(0.5).signals == ()
 
 
 def test_track_lost_while_calm_is_silent():

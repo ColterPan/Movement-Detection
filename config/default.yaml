@@ -11,12 +11,13 @@ camera:
 
 models:
   pose_model: yolo26s-pose   # best accuracy/speed on an Intel iGPU; use yolo26n-pose on CPU-only machines
-  object_model: yolo26n
+  object_model: yolo26s      # yolo26n = faster, but more false objects
   runtime: openvino          # openvino (fast on Intel CPUs/iGPUs) | torch
   device: auto               # auto (Intel iGPU if available, else CPU) | cpu | intel:gpu | cuda:0
   imgsz: 640                 # 480 or 416 = faster, slightly less accurate for far-away people
-  pose_conf: 0.4
-  object_conf: 0.4
+  pose_conf: 0.4             # confidence needed to start tracking a new person
+  tracker: motionsense       # tuned ByteTrack (keeps ids stable through short dropouts)
+  object_conf: 0.5
 
 objects:
   enabled: true
@@ -52,8 +53,8 @@ sinks:
   jsonl: true                # <data_dir>/events.jsonl
   snapshots: true            # <data_dir>/events/<event-id>/*.jpg for warning/critical events
   snapshot_pre_s: 2.0
-  snapshot_post_s: 2.0
-  snapshot_hz: 2.0
-  snapshot_max_events: 200   # oldest incident folders are deleted beyond this
+  snapshot_post_s: 3.0
+  snapshot_hz: 3.0
+  snapshot_max_events: 100   # oldest incident folders are deleted beyond this
   webhooks: []               # e.g. ["http://localhost:5678/webhook/fall"]
   webhook_min_severity: warning

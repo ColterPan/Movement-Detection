@@ -147,20 +147,28 @@ def _std(values: list[float]) -> float:
     return float(np.std(vals)) if len(vals) >= 3 else 0.0
 
 
+def _with_hips(samples: Sequence[Sample]) -> list[Sample]:
+    return [s for s in samples if s.pose.hips_visible]
+
+
 def compute_motion_features(history: TrackHistory) -> MotionFeatures:
     latest = history.latest
     if latest is None:
         raise ValueError("cannot compute motion features on an empty history")
 
     scale = max(reference_scale(history.window(SCALE_WINDOW_S)), 1.0)
-    impact = history.window(IMPACT_WINDOW_S)
+    impact_all = history.window(IMPACT_WINDOW_S)
     tilt_window = history.window(TILT_WINDOW_S)
     osc = history.window(OSCILLATION_WINDOW_S)
-    speed_window = history.window(SPEED_WINDOW_S)
+    # Hip motion only from frames where the hips were really seen: a box-centre stand-in
+    # jumps whenever someone moves partly out of view and would look like a sudden drop.
+    impact = _with_hips(impact_all)
+    speed_window = _with_hips(history.window(SPEED_WINDOW_S))
 
-    hip_y_now = latest.pose.hip_xy[1]
-    min_hip_y = min(s.pose.hip_xy[1] for s in impact)
-    drop = (hip_y_now - min_hip_y) / scale
+    if latest.pose.hips_visible and impact:
+        drop = (latest.pose.hip_xy[1] - min(s.pose.hip_xy[1] for s in impact)) / scale
+    else:
+        drop = 0.0
 
     tilts = [s.pose.torso_tilt for s in tilt_window if not math.isnan(s.pose.torso_tilt)]
     tilt_now = latest.pose.torso_tilt
@@ -172,13 +180,13 @@ def compute_motion_features(history: TrackHistory) -> MotionFeatures:
         scale=scale,
         body_speed=_hip_speed(speed_window, scale),
         horizontal_speed=_hip_speed(speed_window, scale, axis=0),
-        vertical_velocity=_vertical_velocity(history.window(VERTICAL_WINDOW_S), scale),
+        vertical_velocity=_vertical_velocity(_with_hips(history.window(VERTICAL_WINDOW_S)), scale),
         drop_1s=float(drop),
         peak_down_velocity=_peak_down_velocity(impact, scale),
         tilt_change=float(tilt_change),
         min_recent_tilt=float(min_tilt),
         gait=_gait(history.window(GAIT_WINDOW_S), scale),
-        motion_energy=_motion_energy(impact, scale),
+        motion_energy=_motion_energy(impact_all, scale),
         elbow_range=_range([s.pose.elbow_angle for s in osc]),
         knee_range=_range([s.pose.knee_angle for s in osc]),
         yaw_std=_std([s.pose.head_yaw for s in osc]),

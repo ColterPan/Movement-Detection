@@ -1,27 +1,27 @@
 {
   "metrics": {
     "clips": 70,
-    "tp": 21,
+    "tp": 22,
     "fp": 6,
-    "fn": 9,
+    "fn": 8,
     "tn": 34,
-    "precision": 0.7778,
-    "recall": 0.7,
-    "f1": 0.7368,
-    "accuracy": 0.7857,
-    "mean_latency_s": 1.508
+    "precision": 0.7857,
+    "recall": 0.7333,
+    "f1": 0.7586,
+    "accuracy": 0.8,
+    "mean_latency_s": 1.558
   },
   "any_detection_metrics": {
     "clips": 70,
-    "tp": 26,
-    "fp": 8,
-    "fn": 4,
-    "tn": 32,
-    "precision": 0.7647,
-    "recall": 0.8667,
-    "f1": 0.8125,
+    "tp": 24,
+    "fp": 6,
+    "fn": 6,
+    "tn": 34,
+    "precision": 0.8,
+    "recall": 0.8,
+    "f1": 0.8,
     "accuracy": 0.8286,
-    "mean_latency_s": 1.508
+    "mean_latency_s": 1.558
   },
   "clips": [
     {
@@ -32,24 +32,24 @@
       "latency_s": 1.0,
       "suspected": true,
       "activity_summary": {
-        "lying": 0.032,
-        "push_up": 0.024,
-        "squatting": 0.096,
-        "standing": 0.752,
-        "walking": 0.096
+        "lying": 0.284,
+        "push_up": 0.115,
+        "squatting": 0.066,
+        "standing": 0.47,
+        "walking": 0.066
       }
     },
     {
       "name": "fall-02.mp4",
       "has_fall": true,
       "detected": true,
-      "detection_time": 3.2333333333333334,
-      "latency_s": 1.933,
+      "detection_time": 3.2666666666666666,
+      "latency_s": 1.967,
       "suspected": true,
       "activity_summary": {
-        "lying": 0.073,
-        "push_up": 0.24,
-        "sitting": 0.688
+        "lying": 0.317,
+        "push_up": 0.273,
+        "sitting": 0.41
       }
     },
     {
@@ -68,13 +68,13 @@
       "name": "fall-04.mp4",
       "has_fall": true,
       "detected": true,
-      "detection_time": 2.066666666666667,
-      "latency_s": 1.634,
+      "detection_time": 3.1666666666666665,
+      "latency_s": 2.734,
       "suspected": true,
       "activity_summary": {
-        "lying": 0.168,
-        "push_up": 0.484,
-        "sitting": 0.347
+        "lying": 0.224,
+        "push_up": 0.41,
+        "sitting": 0.365
       }
     },
     {
@@ -85,11 +85,10 @@
       "latency_s": 0.933,
       "suspected": true,
       "activity_summary": {
-        "lying": 0.038,
-        "push_up": 0.165,
-        "sitting": 0.045,
-        "standing": 0.331,
-        "walking": 0.421
+        "lying": 0.135,
+        "push_up": 0.252,
+        "standing": 0.27,
+        "walking": 0.344
       }
     },
     {
@@ -113,9 +112,9 @@
       "latency_s": 2.367,
       "suspected": true,
       "activity_summary": {
-        "push_up": 0.314,
-        "squatting": 0.059,
-        "standing": 0.627
+        "push_up": 0.327,
+        "squatting": 0.058,
+        "standing": 0.615
       }
     },
     {
@@ -135,27 +134,28 @@
       "name": "fall-09.mp4",
       "has_fall": true,
       "detected": true,
-      "detection_time": 5.7,
-      "latency_s": 1.7,
+      "detection_time": 5.733333333333333,
+      "latency_s": 1.733,
       "suspected": true,
       "activity_summary": {
-        "lying": 0.053,
-        "push_up": 0.082,
-        "squatting": 0.099,
-        "standing": 0.368,
-        "walking": 0.398
+        "lying": 0.065,
+        "push_up": 0.12,
+        "squatting": 0.16,
+        "standing": 0.315,
+        "walking": 0.34
       }
     },
     {
       "name": "fall-10.mp4",
       "has_fall": true,
       "detected": true,
-      "detection_time": 4.166666666666667,
-      "latency_s": 2.867,
+      "detection_time": 4.133333333333334,
+      "latency_s": 2.833,
       "suspected": true,
       "activity_summary": {
-        "push_up": 0.578,
-        "sitting": 0.422
+        "lying": 0.128,
+        "push_up": 0.526,
+        "sitting": 0.346
       }
     },
     {
@@ -166,10 +166,10 @@
       "latency_s": 2.7,
       "suspected": true,
       "activity_summary": {
-        "push_up": 0.45,
-        "sitting": 0.008,
-        "squatting": 0.078,
-        "standing": 0.465
+        "push_up": 0.405,
+        "sitting": 0.122,
+        "squatting": 0.068,
+        "standing": 0.405
       }
     },
     {
@@ -192,10 +192,10 @@
       "latency_s": 0.767,
       "suspected": true,
       "activity_summary": {
-        "lying": 0.114,
-        "push_up": 0.063,
-        "standing": 0.671,
-        "walking": 0.152
+        "lying": 0.12,
+        "push_up": 0.214,
+        "standing": 0.564,
+        "walking": 0.103
       }
     },
     {
@@ -206,21 +206,21 @@
       "latency_s": 1.5,
       "suspected": true,
       "activity_summary": {
-        "push_up": 0.403,
-        "sitting": 0.444,
-        "standing": 0.153
+        "push_up": 0.341,
+        "sitting": 0.376,
+        "standing": 0.282
       }
     },
     {
       "name": "fall-15.mp4",
       "has_fall": true,
       "detected": true,
-      "detection_time": 2.2666666666666666,
-      "latency_s": 1.367,
+      "detection_time": 2.3333333333333335,
+      "latency_s": 1.433,
       "suspected": true,
       "activity_summary": {
-        "push_up": 0.246,
-        "standing": 0.754
+        "push_up": 0.352,
+        "standing": 0.648
       }
     },
     {
@@ -243,8 +243,8 @@
       "latency_s": 1.2,
       "suspected": true,
       "activity_summary": {
-        "standing": 0.876,
-        "walking": 0.124
+        "standing": 0.905,
+        "walking": 0.095
       }
     },
     {
@@ -255,8 +255,8 @@
       "latency_s": 0.867,
       "suspected": true,
       "activity_summary": {
-        "push_up": 0.22,
-        "sitting": 0.78
+        "push_up": 0.467,
+        "sitting": 0.533
       }
     },
     {
@@ -265,7 +265,7 @@
       "detected": false,
       "detection_time": null,
       "latency_s": null,
-      "suspected": true,
+      "suspected": false,
       "activity_summary": {
         "standing": 1.0
       }
@@ -278,10 +278,10 @@
       "latency_s": null,
       "suspected": true,
       "activity_summary": {
-        "lying": 0.17,
-        "sitting": 0.554,
-        "squatting": 0.17,
-        "walking": 0.107
+        "lying": 0.138,
+        "sitting": 0.414,
+        "squatting": 0.241,
+        "walking": 0.207
       }
     },
     {
@@ -290,7 +290,7 @@
       "detected": false,
       "detection_time": null,
       "latency_s": null,
-      "suspected": true,
+      "suspected": false,
       "activity_summary": {
         "standing": 1.0
       }
@@ -303,21 +303,22 @@
       "latency_s": 1.067,
       "suspected": true,
       "activity_summary": {
-        "lying": 0.511,
-        "sitting": 0.489
+        "lying": 0.31,
+        "push_up": 0.366,
+        "sitting": 0.324
       }
     },
     {
       "name": "fall-23.mp4",
       "has_fall": true,
       "detected": true,
-      "detection_time": 1.7666666666666666,
-      "latency_s": 0.9,
+      "detection_time": 1.8,
+      "latency_s": 0.933,
       "suspected": true,
       "activity_summary": {
-        "sitting": 0.127,
-        "standing": 0.81,
-        "walking": 0.063
+        "sitting": 0.106,
+        "standing": 0.6,
+        "walking": 0.294
       }
     },
     {
@@ -328,21 +329,20 @@
       "latency_s": null,
       "suspected": false,
       "activity_summary": {
-        "lying": 0.027,
-        "push_up": 0.081,
-        "sitting": 0.892
+        "push_up": 0.362,
+        "sitting": 0.638
       }
     },
     {
       "name": "fall-25.mp4",
       "has_fall": true,
       "detected": true,
-      "detection_time": 2.3666666666666667,
-      "latency_s": 0.9,
+      "detection_time": 2.4,
+      "latency_s": 0.933,
       "suspected": true,
       "activity_summary": {
-        "lying": 0.041,
-        "standing": 0.959
+        "sitting": 0.066,
+        "standing": 0.934
       }
     },
     {
@@ -353,9 +353,9 @@
       "latency_s": null,
       "suspected": false,
       "activity_summary": {
-        "lying": 0.077,
-        "push_up": 0.231,
-        "sitting": 0.692
+        "lying": 0.217,
+        "push_up": 0.391,
+        "sitting": 0.391
       }
     },
     {
@@ -377,8 +377,8 @@
       "latency_s": 0.9,
       "suspected": true,
       "activity_summary": {
-        "push_up": 0.208,
-        "sitting": 0.792
+        "push_up": 0.364,
+        "sitting": 0.636
       }
     },
     {
@@ -389,21 +389,21 @@
       "latency_s": 0.933,
       "suspected": true,
       "activity_summary": {
-        "lying": 0.075,
-        "standing": 0.925
+        "sitting": 0.121,
+        "standing": 0.879
       }
     },
     {
       "name": "fall-30.mp4",
       "has_fall": true,
-      "detected": false,
-      "detection_time": null,
-      "latency_s": null,
+      "detected": true,
+      "detection_time": 2.1333333333333333,
+      "latency_s": 1.333,
       "suspected": true,
       "activity_summary": {
-        "lying": 0.037,
-        "push_up": 0.241,
-        "sitting": 0.722
+        "push_up": 0.286,
+        "sitting": 0.557,
+        "walking": 0.157
       }
     },
     {
@@ -414,10 +414,9 @@
       "latency_s": null,
       "suspected": false,
       "activity_summary": {
-        "sitting": 0.028,
-        "squatting": 0.255,
+        "squatting": 0.305,
         "standing": 0.319,
-        "walking": 0.397
+        "walking": 0.376
       }
     },
     {
@@ -428,9 +427,8 @@
       "latency_s": null,
       "suspected": false,
       "activity_summary": {
-        "sitting": 0.048,
-        "squatting": 0.267,
-        "standing": 0.349,
+        "squatting": 0.329,
+        "standing": 0.336,
         "walking": 0.336
       }
     },
@@ -442,9 +440,9 @@
       "latency_s": null,
       "suspected": false,
       "activity_summary": {
-        "squatting": 0.383,
+        "squatting": 0.394,
         "standing": 0.228,
-        "walking": 0.389
+        "walking": 0.378
       }
     },
     {
@@ -482,10 +480,10 @@
       "latency_s": null,
       "suspected": false,
       "activity_summary": {
-        "push_up": 0.167,
-        "squatting": 0.13,
-        "standing": 0.338,
-        "walking": 0.366
+        "push_up": 0.166,
+        "squatting": 0.129,
+        "standing": 0.341,
+        "walking": 0.364
       }
     },
     {
@@ -497,8 +495,8 @@
       "suspected": false,
       "activity_summary": {
         "sitting": 0.167,
-        "standing": 0.494,
-        "walking": 0.339
+        "standing": 0.5,
+        "walking": 0.333
       }
     },
     {
@@ -509,8 +507,8 @@
       "latency_s": null,
       "suspected": false,
       "activity_summary": {
-        "sitting": 0.195,
-        "standing": 0.385,
+        "sitting": 0.201,
+        "standing": 0.379,
         "walking": 0.42
       }
     },
@@ -535,10 +533,10 @@
       "latency_s": null,
       "suspected": false,
       "activity_summary": {
-        "push_up": 0.288,
-        "sitting": 0.037,
-        "squatting": 0.294,
-        "standing": 0.281,
+        "push_up": 0.29,
+        "sitting": 0.06,
+        "squatting": 0.27,
+        "standing": 0.28,
         "walking": 0.1
       }
     },
@@ -550,10 +548,10 @@
       "latency_s": null,
       "suspected": false,
       "activity_summary": {
-        "push_up": 0.247,
-        "sitting": 0.075,
-        "squatting": 0.231,
-        "standing": 0.325,
+        "push_up": 0.243,
+        "sitting": 0.078,
+        "squatting": 0.233,
+        "standing": 0.324,
         "walking": 0.122
       }
     },
@@ -565,9 +563,10 @@
       "latency_s": null,
       "suspected": false,
       "activity_summary": {
-        "squatting": 0.356,
-        "standing": 0.578,
-        "walking": 0.067
+        "sitting": 0.129,
+        "squatting": 0.339,
+        "standing": 0.478,
+        "walking": 0.054
       }
     },
     {
@@ -576,12 +575,12 @@
       "detected": false,
       "detection_time": null,
       "latency_s": null,
-      "suspected": true,
+      "suspected": false,
       "activity_summary": {
-        "sitting": 0.007,
-        "squatting": 0.014,
-        "standing": 0.823,
-        "walking": 0.156
+        "sitting": 0.033,
+        "squatting": 0.362,
+        "standing": 0.438,
+        "walking": 0.167
       }
     },
     {
@@ -592,10 +591,10 @@
       "latency_s": null,
       "suspected": false,
       "activity_summary": {
-        "sitting": 0.016,
-        "squatting": 0.342,
-        "standing": 0.543,
-        "walking": 0.098
+        "sitting": 0.045,
+        "squatting": 0.313,
+        "standing": 0.577,
+        "walking": 0.065
       }
     },
     {
@@ -606,9 +605,9 @@
       "latency_s": null,
       "suspected": false,
       "activity_summary": {
-        "sitting": 0.013,
-        "standing": 0.738,
-        "walking": 0.25
+        "sitting": 0.077,
+        "standing": 0.725,
+        "walking": 0.198
       }
     },
     {
@@ -619,9 +618,9 @@
       "latency_s": null,
       "suspected": false,
       "activity_summary": {
-        "sitting": 0.021,
-        "standing": 0.684,
-        "walking": 0.295
+        "sitting": 0.026,
+        "standing": 0.647,
+        "walking": 0.327
       }
     },
     {
@@ -632,10 +631,10 @@
       "latency_s": null,
       "suspected": false,
       "activity_summary": {
-        "push_up": 0.25,
-        "squatting": 0.097,
-        "standing": 0.583,
-        "walking": 0.069
+        "push_up": 0.132,
+        "squatting": 0.24,
+        "standing": 0.569,
+        "walking": 0.06
       }
     },
     {
@@ -646,9 +645,9 @@
       "latency_s": null,
       "suspected": false,
       "activity_summary": {
-        "sitting": 0.127,
-        "standing": 0.452,
-        "walking": 0.421
+        "sitting": 0.33,
+        "standing": 0.172,
+        "walking": 0.498
       }
     },
     {
@@ -659,9 +658,9 @@
       "latency_s": null,
       "suspected": false,
       "activity_summary": {
-        "sitting": 0.026,
-        "standing": 0.868,
-        "walking": 0.105
+        "sitting": 0.247,
+        "standing": 0.624,
+        "walking": 0.129
       }
     },
     {
@@ -672,9 +671,9 @@
       "latency_s": null,
       "suspected": false,
       "activity_summary": {
-        "sitting": 0.175,
-        "standing": 0.349,
-        "walking": 0.476
+        "sitting": 0.185,
+        "standing": 0.329,
+        "walking": 0.486
       }
     },
     {
@@ -685,8 +684,8 @@
       "latency_s": null,
       "suspected": false,
       "activity_summary": {
-        "standing": 0.492,
-        "walking": 0.508
+        "standing": 0.314,
+        "walking": 0.686
       }
     },
     {
@@ -695,12 +694,10 @@
       "detected": false,
       "detection_time": null,
       "latency_s": null,
-      "suspected": true,
+      "suspected": false,
       "activity_summary": {
-        "sitting": 0.035,
-        "squatting": 0.071,
-        "standing": 0.4,
-        "walking": 0.494
+        "standing": 0.31,
+        "walking": 0.69
       }
     },
     {
@@ -711,8 +708,8 @@
       "latency_s": null,
       "suspected": false,
       "activity_summary": {
-        "standing": 0.5,
-        "walking": 0.5
+        "standing": 0.457,
+        "walking": 0.543
       }
     },
     {
@@ -789,15 +786,14 @@
       "name": "adl-30.mp4",
       "has_fall": false,
       "detected": true,
-      "detection_time": 9.033333333333333,
+      "detection_time": 8.2,
       "latency_s": null,
       "suspected": true,
       "activity_summary": {
-        "lying": 0.023,
-        "push_up": 0.275,
-        "sitting": 0.005,
-        "standing": 0.491,
-        "walking": 0.206
+        "push_up": 0.272,
+        "sitting": 0.195,
+        "standing": 0.376,
+        "walking": 0.157
       }
     },
     {
@@ -808,12 +804,12 @@
       "latency_s": null,
       "suspected": false,
       "activity_summary": {
-        "lying": 0.416,
-        "push_up": 0.113,
-        "sitting": 0.017,
-        "squatting": 0.055,
-        "standing": 0.303,
-        "walking": 0.097
+        "lying": 0.308,
+        "push_up": 0.128,
+        "sitting": 0.024,
+        "squatting": 0.064,
+        "standing": 0.288,
+        "walking": 0.188
       }
     },
     {
@@ -824,28 +820,27 @@
       "latency_s": null,
       "suspected": true,
       "activity_summary": {
-        "lying": 0.074,
-        "push_up": 0.139,
-        "sitting": 0.015,
-        "squatting": 0.158,
-        "standing": 0.386,
-        "walking": 0.228
+        "lying": 0.103,
+        "push_up": 0.117,
+        "sitting": 0.004,
+        "squatting": 0.143,
+        "standing": 0.35,
+        "walking": 0.283
       }
     },
     {
       "name": "adl-33.mp4",
       "has_fall": false,
       "detected": true,
-      "detection_time": 4.3,
+      "detection_time": 5.4,
       "latency_s": null,
       "suspected": true,
       "activity_summary": {
-        "lying": 0.088,
-        "push_up": 0.135,
-        "sitting": 0.135,
-        "squatting": 0.071,
-        "standing": 0.559,
-        "walking": 0.012
+        "lying": 0.106,
+        "push_up": 0.218,
+        "squatting": 0.064,
+        "standing": 0.505,
+        "walking": 0.106
       }
     },
     {
@@ -856,24 +851,25 @@
       "latency_s": null,
       "suspected": false,
       "activity_summary": {
-        "push_up": 0.39,
-        "squatting": 0.374,
-        "standing": 0.235
+        "push_up": 0.482,
+        "squatting": 0.225,
+        "standing": 0.23,
+        "walking": 0.063
       }
     },
     {
       "name": "adl-35.mp4",
       "has_fall": false,
       "detected": true,
-      "detection_time": 3.1666666666666665,
+      "detection_time": 3.2333333333333334,
       "latency_s": null,
       "suspected": true,
       "activity_summary": {
-        "lying": 0.062,
-        "push_up": 0.282,
-        "squatting": 0.207,
-        "standing": 0.228,
-        "walking": 0.22
+        "lying": 0.245,
+        "push_up": 0.241,
+        "squatting": 0.145,
+        "standing": 0.186,
+        "walking": 0.183
       }
     },
     {
@@ -884,9 +880,9 @@
       "latency_s": null,
       "suspected": false,
       "activity_summary": {
-        "sitting": 0.181,
-        "standing": 0.403,
-        "walking": 0.416
+        "sitting": 0.298,
+        "standing": 0.345,
+        "walking": 0.357
       }
     },
     {
@@ -897,11 +893,11 @@
       "latency_s": null,
       "suspected": false,
       "activity_summary": {
-        "push_up": 0.003,
-        "sitting": 0.306,
-        "squatting": 0.111,
-        "standing": 0.303,
-        "walking": 0.277
+        "push_up": 0.016,
+        "sitting": 0.303,
+        "squatting": 0.103,
+        "standing": 0.297,
+        "walking": 0.281
       }
     },
     {
@@ -912,37 +908,38 @@
       "latency_s": null,
       "suspected": false,
       "activity_summary": {
-        "lying": 0.333,
-        "squatting": 0.112,
-        "standing": 0.375,
-        "walking": 0.179
+        "push_up": 0.047,
+        "sitting": 0.075,
+        "squatting": 0.028,
+        "standing": 0.332,
+        "walking": 0.519
       }
     },
     {
       "name": "adl-39.mp4",
       "has_fall": false,
       "detected": true,
-      "detection_time": 6.566666666666666,
+      "detection_time": 6.6,
       "latency_s": null,
       "suspected": true,
       "activity_summary": {
-        "squatting": 0.122,
-        "standing": 0.703,
-        "walking": 0.174
+        "squatting": 0.01,
+        "standing": 0.63,
+        "walking": 0.359
       }
     },
     {
       "name": "adl-40.mp4",
       "has_fall": false,
       "detected": true,
-      "detection_time": 8.566666666666666,
+      "detection_time": 8.633333333333333,
       "latency_s": null,
       "suspected": true,
       "activity_summary": {
-        "push_up": 0.029,
-        "squatting": 0.214,
-        "standing": 0.567,
-        "walking": 0.19
+        "push_up": 0.102,
+        "squatting": 0.209,
+        "standing": 0.523,
+        "walking": 0.166
       }
     }
   ]

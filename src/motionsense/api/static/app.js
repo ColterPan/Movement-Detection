@@ -129,9 +129,8 @@ function addEvent(e, live) {
   const msg = el("span", `sev-${e.severity}`, e.message || e.type);
   if (e.snapshots_url) {
     const a = el("a", "", "snapshots");
-    a.href = withToken(e.snapshots_url);
-    a.target = "_blank";
-    a.rel = "noopener";
+    a.href = "#";
+    a.addEventListener("click", (ev) => { ev.preventDefault(); openViewer(e.id); });
     msg.append(a);
   }
   li.append(time, msg);
@@ -142,6 +141,7 @@ function addEvent(e, live) {
   if (live && ALARM_TYPES.has(e.type)) raiseAlarm(e.track_id, e.type, e.message, true);
   if (live && e.type === "system_error") raiseAlarm("system", e.type, e.message, false);
   if (live && e.type === "fall_recovered") clearTrackAlarm(e.track_id);
+  if (live && e.snapshots_url) setTimeout(loadIncidents, 500);
 }
 
 // ------------------------------------------------------------------ alarm
@@ -251,5 +251,115 @@ $("alert-ack").addEventListener("click", acknowledgeAll);
 $("opt-info").addEventListener("change", (ev) => {
   for (const li of $("events").children) if (li.dataset.info === "1") li.classList.toggle("hidden", !ev.target.checked);
 });
+// ------------------------------------------------------------------ incidents & snapshot viewer
+const viewer = { frames: [], index: 0 };
+
+async function api(path) {
+  const res = await fetch(withToken(path));
+  if (!res.ok) throw new Error(`${res.status} ${res.statusText}`);
+  return res.json();
+}
+
+const TYPE_TITLES = {
+  fall_confirmed: "Fall detected",
+  fall_suspected: "Possible fall",
+  inactive_on_floor: "Not getting up",
+};
+
+function timeLabel(ts) {
+  const t = new Date(ts * 1000);
+  return ts > 1e9 ? t.toLocaleString() : `${ts.toFixed(1)} s (video time)`;
+}
+
+async function loadIncidents() {
+  const box = $("incidents");
+  try {
+    const data = await api("/api/v1/incidents?limit=20");
+    box.replaceChildren();
+    if (!data.incidents.length) {
+      box.append(el("li", "muted", "No falls recorded yet."));
+      return;
+    }
+    for (const inc of data.incidents) {
+      const li = el("li");
+      const text = el("div");
+      const title = el("div", `inc-title sev-${inc.severity}-text`,
+        `${TYPE_TITLES[inc.type] || inc.type} · person #${inc.track_id ?? "?"}`);
+      text.append(title, el("div", "inc-time", timeLabel(inc.ts)));
+      const btn = el("button", "", "View");
+      btn.type = "button";
+      btn.addEventListener("click", () => openViewer(inc.id));
+      li.append(text, btn);
+      box.append(li);
+    }
+  } catch (err) {
+    box.replaceChildren(el("li", "muted", `Could not load incidents (${err.message}).`));
+  }
+}
+
+async function openViewer(eventId) {
+  $("viewer").classList.remove("hidden");
+  $("viewer-title").textContent = "Loading…";
+  $("viewer-sub").textContent = "";
+  $("viewer-strip").replaceChildren();
+  $("viewer-img").removeAttribute("src");
+  $("viewer-caption").textContent = "";
+  try {
+    const data = await api(`/api/v1/events/${encodeURIComponent(eventId)}/snapshots`);
+    const ev = data.event || {};
+    $("viewer-title").textContent = ev.message || TYPE_TITLES[ev.type] || "Incident";
+    const conf = ev.confidence != null ? ` · confidence ${Math.round(ev.confidence * 100)}%` : "";
+    $("viewer-sub").textContent = ev.ts ? `${timeLabel(ev.ts)}${conf}` : "";
+    viewer.frames = data.frames;
+    $("viewer-empty").classList.toggle("hidden", data.frames.length > 0);
+    const strip = $("viewer-strip");
+    data.frames.forEach((f, i) => {
+      const b = el("button", f.phase);
+      b.type = "button";
+      b.title = `${f.offset_s >= 0 ? "+" : ""}${f.offset_s.toFixed(1)} s`;
+      const img = el("img");
+      img.loading = "lazy";
+      img.alt = `${f.phase} frame ${b.title}`;
+      img.src = withToken(f.url);
+      b.append(img);
+      b.addEventListener("click", () => showFrame(i));
+      strip.append(b);
+    });
+    // Start at the moment of the event (first "after" frame), or the last frame we have.
+    const first = data.frames.findIndex((f) => f.phase === "after");
+    if (data.frames.length) showFrame(first >= 0 ? first : data.frames.length - 1);
+  } catch (err) {
+    $("viewer-title").textContent = `Could not load snapshots (${err.message})`;
+  }
+}
+
+function showFrame(i) {
+  if (!viewer.frames.length) return;
+  viewer.index = (i + viewer.frames.length) % viewer.frames.length;
+  const f = viewer.frames[viewer.index];
+  $("viewer-img").src = withToken($("viewer-raw").checked ? f.raw_url : f.url);
+  const when = f.offset_s >= 0 ? `${f.offset_s.toFixed(1)} s after` : `${(-f.offset_s).toFixed(1)} s before`;
+  $("viewer-caption").textContent = `Frame ${viewer.index + 1} of ${viewer.frames.length} · ${when} the alert`;
+  [...$("viewer-strip").children].forEach((b, j) => b.classList.toggle("active", j === viewer.index));
+}
+
+function closeViewer() { $("viewer").classList.add("hidden"); }
+
+$("viewer-close").addEventListener("click", closeViewer);
+$("viewer").addEventListener("click", (ev) => { if (ev.target === $("viewer")) closeViewer(); });
+$("viewer-prev").addEventListener("click", () => showFrame(viewer.index - 1));
+$("viewer-next").addEventListener("click", () => showFrame(viewer.index + 1));
+$("viewer-raw").addEventListener("change", () => showFrame(viewer.index));
+$("incidents-refresh").addEventListener("click", loadIncidents);
+document.addEventListener("keydown", (ev) => {
+  if ($("viewer").classList.contains("hidden")) return;
+  if (ev.key === "Escape") closeViewer();
+  if (ev.key === "ArrowLeft") showFrame(viewer.index - 1);
+  if (ev.key === "ArrowRight") showFrame(viewer.index + 1);
+});
+
 startVideo();
 connect();
+loadIncidents();
+// Deep link: /?incident=<event id> opens that incident directly (e.g. from a notification).
+if (params.get("incident")) openViewer(params.get("incident"));

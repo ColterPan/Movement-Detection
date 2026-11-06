@@ -38,6 +38,10 @@
         <div id="people" class="people"><p class="muted">Nobody in view.</p></div>
       </div>
       <div class="card">
+        <div class="card-head"><h2>Incidents</h2><button id="incidents-refresh" class="link-btn" type="button">refresh</button></div>
+        <ol id="incidents" class="incidents"><li class="muted">No falls recorded yet.</li></ol>
+      </div>
+      <div class="card">
         <div class="card-head"><h2>Objects in view</h2></div>
         <div id="objects" class="chips"><span class="muted">None detected.</span></div>
       </div>
@@ -51,6 +55,31 @@
       <ol id="events" class="events"></ol>
     </section>
   </main>
+
+  <div id="viewer" class="viewer hidden" role="dialog" aria-modal="true" aria-labelledby="viewer-title">
+    <div class="viewer-panel">
+      <div class="viewer-head">
+        <div>
+          <div id="viewer-title" class="viewer-title">Incident</div>
+          <div id="viewer-sub" class="muted small-text"></div>
+        </div>
+        <div class="viewer-actions">
+          <label class="small"><input type="checkbox" id="viewer-raw"> raw camera frames</label>
+          <button id="viewer-close" type="button" aria-label="Close">✕</button>
+        </div>
+      </div>
+      <div class="viewer-stage">
+        <button id="viewer-prev" class="nav-btn" type="button" aria-label="Previous frame">‹</button>
+        <figure>
+          <img id="viewer-img" alt="Incident frame">
+          <figcaption id="viewer-caption" class="muted"></figcaption>
+        </figure>
+        <button id="viewer-next" class="nav-btn" type="button" aria-label="Next frame">›</button>
+      </div>
+      <div id="viewer-strip" class="viewer-strip"></div>
+      <p id="viewer-empty" class="muted hidden">No snapshots were saved for this event.</p>
+    </div>
+  </div>
 
   <footer class="foot muted">
     API docs at <a href="/docs">/docs</a> · live JSON at <code>/ws</code> · prototype, not a medical device

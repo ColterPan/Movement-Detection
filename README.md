@@ -13,6 +13,7 @@ MotionSense watches a webcam, phone camera, IP camera or video file and, for eve
 ## Contents
 
 - [Run it on Windows (easiest way)](#run-it-on-windows-easiest-way)
+- [Set up the camera (the biggest factor for accuracy)](#set-up-the-camera-the-biggest-factor-for-accuracy)
 - [Test it yourself: the live checklist](#test-it-yourself-the-live-checklist)
 - [Record your own clips and measure accuracy](#record-your-own-clips-and-measure-accuracy)
 - [Troubleshooting](#troubleshooting)
@@ -68,6 +69,27 @@ You can also double-click `run.bat` in File Explorer to start the webcam.
 
 > The Python environment goes to `%USERPROFILE%\.venvs\motion-detection`, and models, events and snapshots go to `%LOCALAPPDATA%\motionsense`. Neither is inside the project folder, so OneDrive does not try to sync gigabytes of files.
 
+## Set up the camera (the biggest factor for accuracy)
+
+Fall detection needs to **see the floor and the whole body**. A laptop webcam on a desk only sees people from the waist up, so a person who falls simply drops out of view.
+
+```
+   GOOD                                   POOR
+   camera high in a corner,               laptop on a desk,
+   tilted down at the room                at face height
+        📷                                       
+         ╲                                 🧍  📷  (sees head + shoulders only)
+          ╲   🧍                          ─────────
+   ────────╲─────── floor visible          floor not visible
+```
+
+- **Height:** about 1.5–2.5 m (a shelf, the top of a wardrobe, or a phone on a tripod or wall mount), tilted down so the floor in the middle of the room is in view.
+- **Distance:** people should take up roughly ⅓–⅔ of the image height while standing. Too close is the most common problem.
+- **Angle:** from the side or a corner, not straight down from the ceiling.
+- **Light:** a lit room. In the dark, webcams drop to 5–10 FPS and the pose model misses people.
+- An old **Android phone running IP Webcam** on a shelf makes an excellent fall camera: `run.bat camera http://<phone-ip>:8080/video`.
+
+The dashboard tells you when the view is limited: the person card shows **partial view** whenever the legs or hips are cut off. Sitting at the laptop is fine for trying it out, but not for fall monitoring.
 ## Test it yourself: the live checklist
 
 Start `run.bat`, put the dashboard next to you (or on your phone, see below), and work through this list. Each line says what you should see.
@@ -91,7 +113,7 @@ Start `run.bat`, put the dashboard next to you (or on your phone, see below), an
 Tips:
 - Click **Acknowledge** to silence an alert. Tick **Voice check-in** to have the browser say *"Are you okay?"* on a confirmed fall.
 - Tick **show activity changes** in the Events panel to see every activity change.
-- Each alert has a **snapshots** link with the frames from just before and after the fall.
+- Each alert has a **snapshots** link. It opens a viewer with the frames from 2 s before to 3 s after the alert, with the skeletons and IDs exactly as the detector saw them. Use ‹ › or the arrow keys to step through, and tick *raw camera frames* for the untouched images. The **Incidents** panel keeps past falls, even after a restart.
 - Write down anything that looks wrong, such as the wrong activity, a missed fall or a false alarm. Then record a clip of it (next section) so it can be fixed and turned into a test.
 
 ## Record your own clips and measure accuracy
@@ -136,6 +158,8 @@ Recordings stay on your PC; `recordings/` is in `.gitignore`.
 | "cannot open camera" | Close other apps using the camera (Teams, Zoom, the Camera app). Check *Settings → Privacy & security → Camera* and allow desktop apps. Try `run.bat camera 1`. |
 | Low FPS (under 10) | Webcams slow down in dim light, so add light. Run `run.bat bench`: if `device=cpu`, edit `config/default.yaml` and set `pose_model: yolo26n-pose` and `imgsz: 480`. |
 | "Nobody in view" while you are there | The whole body (or at least head to hips) must be visible. Step back from the camera. |
+| Always "sitting (partial view)" | The camera only sees your upper body. Raise it and step back (see [camera setup](#set-up-the-camera-the-biggest-factor-for-accuracy)). |
+| Person number keeps changing (#3, #9, #14…) | The detector keeps losing you: improve the light and make sure you are fully in view. Short dropouts are already bridged. |
 | Activities look wrong | Side or high-corner camera views work best. If only your upper body is visible (sitting at a laptop), the person card says **partial view** and the guess is deliberately cautious. |
 | False fall alerts | Note what you were doing and record a clip. You can make detection stricter in `config/default.yaml` (raise `fall.drop_threshold` or `fall.velocity_threshold`). |
 | Port 8000 already in use | `python -m uv run --extra yolo motionsense serve --source 0 --port 8010 --open` |
@@ -323,10 +347,10 @@ The test suite drives the whole pipeline with a **procedural skeleton simulator*
 
 | Metric                        | Confirmed falls | Any detection (early `fall_suspected` or confirmed) |
 | ----------------------------- | --------------- | ----------------------------------------------------- |
-| Precision                     | **0.78**  | 0.76                                                  |
-| Recall                        | **0.70**  | **0.87**                                        |
-| F1                            | **0.74**  | 0.81                                                  |
-| Mean latency after fall onset | 1.5 s           | —                                                    |
+| Precision | **0.79** | 0.80 |
+| Recall | **0.73** | **0.80** |
+| F1 | **0.76** | 0.80 |
+| Mean latency after fall onset | 1.6 s | — |
 
 Full per-clip report: [reports/urfall/report.md](reports/urfall/report.md).
 

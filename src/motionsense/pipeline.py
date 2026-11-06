@@ -9,7 +9,7 @@ from __future__ import annotations
 import logging
 import time
 from collections.abc import Callable, Sequence
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 
 from motionsense.activity.base import ActivityClassifier, ActivityContext
 from motionsense.activity.rep_counter import PUSH_UP, SQUAT, RepCounter
@@ -18,7 +18,7 @@ from motionsense.activity.smoothing import ProbabilitySmoother, StableLabel
 from motionsense.config import Settings
 from motionsense.events.bus import EventBus
 from motionsense.events.models import INCIDENT_TYPES, Event, EventType, make_event
-from motionsense.fall.context import find_support
+from motionsense.fall.context import LYING_SUPPORTS, find_support
 from motionsense.fall.detector import FallDetector, FallSignal, FallState
 from motionsense.features.geometry import compute_pose_features
 from motionsense.features.kinematics import compute_motion_features
@@ -44,6 +44,17 @@ FPS_EMA = 0.1
 DOWN_MEMORY_S = 60.0
 DOWN_MATCH_IOU = 0.2
 DOWN_STATES = frozenset({FallState.FALLEN, FallState.INACTIVE})
+GHOST_HOLD_S = 0.6  # keep showing a person this long after a missed detection
+CLOSEUP_AREA = 0.25  # a person box covering this much of the frame is a close-up
+INSIDE_PERSON = 0.6  # objects mostly inside a close-up person are ignored
+
+
+def _area(b: BBox) -> float:
+    return max(0.0, b[2] - b[0]) * max(0.0, b[3] - b[1])
+
+
+def _intersection(a: BBox, b: BBox) -> float:
+    return _area((max(a[0], b[0]), max(a[1], b[1]), min(a[2], b[2]), min(a[3], b[3])))
 
 
 @dataclass
@@ -102,8 +113,9 @@ class Pipeline:
             if det.track_id is None:  # pragma: no cover - IouTracker always assigns
                 continue
             seen.add(det.track_id)
-            persons.append(self._analyse_person(det, frame.ts))
+            persons.append(self._analyse_person(det, frame))
 
+        persons.extend(self._recently_missed(frame.ts, seen))
         self._expire_tracks(frame.ts, seen)
 
         state = SceneState(
@@ -143,17 +155,49 @@ class Pipeline:
             return
         self._last_object_ts = frame.ts
         try:
-            fresh = self._objects_backend.infer(frame)
+            fresh = self._without_closeup_ghosts(self._objects_backend.infer(frame), frame.size)
         except Exception:
             logger.exception("object detection failed")
             return
         self._objects = tuple(fresh) + tuple(self._remembered_furniture(fresh, frame.ts))
 
+    def _without_closeup_ghosts(
+        self, objects: list[ObjectDetection], frame_size: tuple[int, int]
+    ) -> list[ObjectDetection]:
+        """Drop "objects" that are really parts of a person filling the view (a close-up torso
+        is easily mistaken for a chair, bed or toilet)."""
+        frame_area = max(frame_size[0] * frame_size[1], 1)
+        big_people = [
+            p.bbox for p in self.latest.persons if _area(p.bbox) / frame_area >= CLOSEUP_AREA
+        ]
+        if not big_people:
+            return objects
+        return [
+            o
+            for o in objects
+            if all(
+                _intersection(o.bbox, b) / max(_area(o.bbox), 1.0) < INSIDE_PERSON
+                for b in big_people
+            )
+        ]
+
+    def _recently_missed(self, ts: float, seen: set[int]) -> list[PersonState]:
+        """People the detector missed for a moment stay on screen briefly (no flicker)."""
+        out: list[PersonState] = []
+        for tid, ctx in self._tracks.items():
+            if tid in seen or ctx.last_state is None or ts - ctx.last_seen > GHOST_HOLD_S:
+                continue
+            out.append(
+                replace(ctx.last_state, attributes={**ctx.last_state.attributes, "stale": True})
+            )
+        return out
+
     def _remembered_furniture(
         self, fresh: list[ObjectDetection], ts: float
     ) -> list[ObjectDetection]:
-        """Keep recently seen support furniture that is now hidden (e.g. a person lies on the bed)."""
-        support = set(self.settings.objects.support_classes)
+        """Keep recently seen beds/couches that are now hidden (e.g. a person lies on the bed).
+        Small furniture (chairs) is not remembered: it moves, and false detections would linger."""
+        support = LYING_SUPPORTS & set(self.settings.objects.support_classes)
         kept: list[tuple[ObjectDetection, float]] = [(o, ts) for o in fresh if o.label in support]
         remembered: list[ObjectDetection] = []
         for old, seen_ts in self._furniture:
@@ -186,8 +230,9 @@ class Pipeline:
             last_seen=ts,
         )
 
-    def _analyse_person(self, det: PersonDetection, ts: float) -> PersonState:
+    def _analyse_person(self, det: PersonDetection, frame: Frame) -> PersonState:
         assert det.track_id is not None
+        ts = frame.ts
         tid = det.track_id
         ctx = self._tracks.get(tid)
         if ctx is None:
@@ -199,7 +244,7 @@ class Pipeline:
         ctx.last_seen = ts
 
         pose = compute_pose_features(
-            det.keypoints, det.bbox, self.settings.models.keypoint_min_conf
+            det.keypoints, det.bbox, self.settings.models.keypoint_min_conf, frame_size=frame.size
         )
         ctx.history.add(Sample(ts=ts, pose=pose, keypoints=det.keypoints, bbox=det.bbox))
         motion = compute_motion_features(ctx.history)

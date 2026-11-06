@@ -44,15 +44,17 @@ class CameraConfig(_Section):
 
 class ModelConfig(_Section):
     pose_model: str = "yolo26s-pose"
-    object_model: str = "yolo26n"
+    object_model: str = "yolo26s"
     runtime: Literal["openvino", "torch"] = "openvino"
     device: str = Field(
         "auto", description="'auto', 'cpu', 'intel:gpu' (OpenVINO iGPU), 'cuda:0'..."
     )
     imgsz: int = Field(640, ge=160, le=1920)
     pose_conf: float = Field(0.4, ge=0.05, le=0.95)
-    object_conf: float = Field(0.4, ge=0.05, le=0.95)
-    tracker: str = "bytetrack.yaml"
+    object_conf: float = Field(0.5, ge=0.05, le=0.95)
+    tracker: str = Field(
+        "motionsense", description="motionsense (tuned ByteTrack) or an Ultralytics tracker yaml"
+    )
     keypoint_min_conf: float = Field(0.35, ge=0.0, le=1.0)
 
 
@@ -107,10 +109,10 @@ class SinksConfig(_Section):
     jsonl: bool = True
     snapshots: bool = True
     snapshot_pre_s: float = Field(2.0, ge=0.0)
-    snapshot_post_s: float = Field(2.0, ge=0.0)
-    snapshot_hz: float = Field(2.0, gt=0.0)
+    snapshot_post_s: float = Field(3.0, ge=0.0)
+    snapshot_hz: float = Field(3.0, gt=0.0)
     snapshot_max_events: int = Field(
-        200, ge=1, description="Keep at most this many incidents on disk"
+        100, ge=1, description="Keep at most this many incidents on disk"
     )
     webhooks: tuple[str, ...] = ()
     webhook_min_severity: Literal["info", "warning", "critical"] = "warning"

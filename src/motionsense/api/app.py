@@ -158,12 +158,34 @@ def create_app(service: ServiceLike, manage_lifecycle: bool = True) -> FastAPI:
 
     @app.get("/api/v1/events/{event_id}/snapshots", tags=["events"], dependencies=auth)
     def snapshots(event_id: str) -> dict[str, Any]:
+        """Incident frames in time order. ``url`` is annotated (skeletons, ids, risk);
+        ``raw_url`` is the untouched camera frame. ``offset_s`` is relative to the event."""
         recorder = service.snapshots
-        names = recorder.list_snapshots(event_id) if recorder else []
+        frames = recorder.frames(event_id) if recorder else []
+        base = f"/api/v1/events/{event_id}/snapshots"
+        stored = service.bus.get(event_id)
         return {
             "event_id": event_id,
-            "snapshots": [f"/api/v1/events/{event_id}/snapshots/{n}" for n in names],
+            "event": stored.to_dict()
+            if stored
+            else (recorder.event_info(event_id) if recorder else None),
+            "frames": [
+                {
+                    "phase": f["phase"],
+                    "offset_s": f["offset_s"],
+                    "url": f"{base}/{f['name']}",
+                    "raw_url": f"{base}/{f['raw']}",
+                }
+                for f in frames
+            ],
+            "snapshots": [f"{base}/{f['name']}" for f in frames],
         }
+
+    @app.get("/api/v1/incidents", tags=["events"], dependencies=auth)
+    def incidents(limit: Annotated[int, Query(ge=1, le=100)] = 20) -> dict[str, Any]:
+        """Saved incidents (falls, inactivity) with snapshots, newest first; kept across restarts."""
+        recorder = service.snapshots
+        return {"incidents": recorder.incidents(limit) if recorder else []}
 
     @app.get("/api/v1/events/{event_id}/snapshots/{name}", tags=["events"], dependencies=auth)
     def snapshot_file(event_id: str, name: str) -> FileResponse:

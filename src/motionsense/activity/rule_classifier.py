@@ -35,11 +35,14 @@ def low(x: float, centre: float, width: float) -> float:
 
 
 def _tilt(pose: PoseFeatures) -> float:
-    """Torso tilt, falling back to the bounding-box shape when the torso is not visible."""
+    """Best available body tilt: torso, else head-over-shoulders, else whole-body box shape.
+
+    NaN when none of these is trustworthy (e.g. a close-up face), so the classifier stays
+    uncertain instead of mistaking a wide close-up box for someone lying down.
+    """
     if not math.isnan(pose.torso_tilt):
         return pose.torso_tilt
-    # aspect 0.4 (tall) -> ~0 deg, 2.0 (wide) -> ~90 deg
-    return max(0.0, min(90.0, (pose.bbox_aspect - 0.4) / 1.6 * 90.0))
+    return pose.posture_tilt
 
 
 class RuleBasedClassifier:
@@ -69,7 +72,17 @@ class RuleBasedClassifier:
                 pose, motion, upright, semi_upright, horizontal, still, walkish, runish, on_seat
             )
         else:
-            scores, quality = self._upper_body(upright, horizontal, still, walkish, runish, on_seat)
+            tilt_known = not math.isnan(tilt)
+            scores, quality = self._upper_body(
+                upright
+                if tilt_known
+                else 0.8,  # unknown tilt, but a visible head/torso: upright-ish
+                horizontal if tilt_known else 0.0,
+                still,
+                walkish,
+                runish,
+                on_seat,
+            )
 
         if pose.quality < 0.25:
             quality = "low"

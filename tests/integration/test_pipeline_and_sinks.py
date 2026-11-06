@@ -119,7 +119,7 @@ def test_jsonl_log_appends_lines(tmp_path: Path):
     assert [json.loads(line)["type"] for line in lines] == ["fall_confirmed", "person_left"]
 
 
-def test_snapshot_recorder_saves_pre_and_post_frames(tmp_path: Path):
+def test_snapshot_recorder_saves_annotated_and_raw_frames(tmp_path: Path):
     rec = SnapshotRecorder(tmp_path, pre_s=1.0, post_s=1.0, hz=4.0)
     img = np.full((48, 64, 3), 128, np.uint8)
     for i in range(20):  # 2 s of frames at 10 FPS
@@ -129,13 +129,24 @@ def test_snapshot_recorder_saves_pre_and_post_frames(tmp_path: Path):
     rec(make_event(EventType.PERSON_ENTERED, ts=1.9))  # info events are ignored
     for i in range(20, 35):
         rec.on_frame(Frame(img, ts=i / 10, index=i), EMPTY_SCENE)
-    names = rec.list_snapshots(event.id)
-    assert any(n.startswith("pre_") for n in names)
-    assert any(n.startswith("post_") for n in names)
+
+    frames = rec.frames(event.id)
+    phases = [f["phase"] for f in frames]
+    assert "before" in phases and "after" in phases
+    assert phases == sorted(phases, key=lambda p: p == "after")  # before frames come first
+    offsets = [f["offset_s"] for f in frames]
+    assert offsets == sorted(offsets)
+    assert all(f["raw"].endswith("_raw.jpg") for f in frames)
+    assert rec.list_snapshots(event.id)[0] == "before_01.jpg"
+    assert rec.snapshot_path(event.id, "before_01_raw.jpg") is not None
     assert (tmp_path / event.id / "event.json").exists()
-    assert rec.snapshot_path(event.id, names[0]) is not None
+    assert rec.event_info(event.id)["type"] == "fall_confirmed"
+    assert [i["id"] for i in rec.incidents()] == [event.id]
+    # path traversal and junk names are rejected
     assert rec.snapshot_path(event.id, "../../secret.jpg") is None
+    assert rec.snapshot_path(event.id, "event.json") is None
     assert rec.list_snapshots("../etc") == []
+    assert rec.event_info("../etc") is None
     assert not is_safe_event_id("..\\x")
     assert len(list(tmp_path.iterdir())) == 1
 

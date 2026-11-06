@@ -29,6 +29,7 @@ STILL_ENERGY = 0.6  # torso lengths/s of mean keypoint motion
 REARM_AFTER_RECOVERY_S = 2.0
 UNSEEN_FALL_LYING_PROB = 0.6
 RECOVERY_HIP_RISE = 0.7  # torso lengths
+LOST_MIN_TILT_FRACTION = 0.5
 
 
 class FallState(StrEnum):
@@ -295,6 +296,9 @@ class FallDetector:
             and motion is not None
             and motion.drop_1s >= self.cfg.drop_threshold
             and motion.peak_down_velocity >= self.cfg.velocity_threshold
+            # the body must also have started to tip over: walking or leaning out of view
+            # (e.g. stepping close past the camera) moves the box without rotating the torso
+            and motion.tilt_change >= LOST_MIN_TILT_FRACTION * self.cfg.tilt_change_threshold
             and ts - self._last_suspected >= self.cfg.cooldown_s
         ):
             self._last_suspected = ts
