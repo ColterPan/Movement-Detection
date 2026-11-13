@@ -25,7 +25,7 @@ dependencies = [
 
 [project.optional-dependencies]
 yolo = [
-    "ultralytics>=8.3",
+    "ultralytics>=8.4.208",
     "lap>=0.5",
     "openvino>=2024.4",
 ]
